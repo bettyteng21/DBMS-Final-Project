@@ -83,7 +83,6 @@ def character_page():
     # set the parameter of GET
     page = request.args.get('page', default=0, type=int)
     anima_name = request.args.get('anima_name', default="all")
-    voice_name = request.args.get('voice_name', default="all")
 
     herokuCLI_command = 'heroku config:get DATABASE_URL -a anima-database-fe'
     DATABASE_URL = os.popen(herokuCLI_command).read()[:-1]
@@ -105,10 +104,6 @@ def character_page():
             SELECT * FROM character WHERE anima like '%{ anima_name }%';
         """
 
-    if voice_name != "all":
-        SQL_select_command = f"""
-                   SELECT * FROM voice WHERE name like '%{voice_name}%';
-        """
     ####################### }here
 
     # execute SQL
@@ -122,20 +117,8 @@ def character_page():
         end = prelen
     data = data[page * 50:end]
 
-    # get the character and the anima which voice played
-    for i, a_data in enumerate(data):
-        SQL_select_command = f"""
-               SELECT name, anima FROM character WHERE voice like '%{a_data[0]}%';
-           """
-
     # execute SQL
     cursor.execute(SQL_select_command)
-
-    details_data = cursor.fetchall()
-
-    # add detail to the tail of data
-    data[i] = list(data[i])
-    data[i].append(details_data)
 
     # close cursor
     cursor.close()
@@ -150,11 +133,7 @@ def character_page():
     if end == prelen:
         right = page
 
-    if voice_name != "all":
-        return render_template("voice.html", datas=data, character_name=voice_name, left=left, right=right, page=page)
-
-    else:
-        return render_template("character.html", datas=data, anima_name=anima_name, voice_name=voice_name, left=left, right=right, page=page)
+    return render_template("character.html", datas=data, anima_name=anima_name, left=left, right=right, page=page)
 
 
 @app.route('/ecioV')
